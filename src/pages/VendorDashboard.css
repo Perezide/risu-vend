@@ -1,0 +1,205 @@
+/* VendorDashboard.css */
+.vendor-dashboard {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    min-height: calc(100vh - 60px); /* Adjust based on your header height */
+    background-color: #f8f9fa;
+  }
+  
+  .dashboard-sidebar {
+    background-color: #fff;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    padding: 2rem 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  
+  .vendor-info {
+    padding: 0 1.5rem 1.5rem;
+    border-bottom: 1px solid #eaeaea;
+    margin-bottom: 1.5rem;
+  }
+  
+  .vendor-info h3 {
+    margin: 0 0 0.5rem;
+    color: #333;
+    font-size: 1.2rem;
+  }
+  
+  .vendor-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .dashboard-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 1rem;
+  }
+  
+  .dashboard-nav button {
+    text-align: left;
+    padding: 0.8rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .dashboard-nav button:hover {
+    background-color: #f5f7ff;
+    color: #4a6cf7;
+  }
+  
+  .dashboard-nav button.active {
+    background-color: #4a6cf7;
+    color: white;
+    font-weight: 500;
+  }
+  
+  .dashboard-content {
+    padding: 2rem;
+    overflow-y: auto;
+  }
+  
+  .dashboard-overview h2 {
+    margin-top: 0;
+    margin-bottom: 2rem;
+    color: #333;
+  }
+  
+  .overview-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  .stat-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.07);
+  }
+  
+  .stat-card h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #666;
+    font-weight: 500;
+    font-size: 1rem;
+  }
+  
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+  }
+  
+  .shop-selector {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  .shop-selector h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+  
+  .shop-list {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .shop-item {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .shop-item:hover {
+    background-color: #f0f2f5;
+  }
+  
+  .shop-item.selected {
+    background-color: #e5ebff;
+    border-left: 3px solid #4a6cf7;
+  }
+  
+  .shop-item h4 {
+    margin: 0;
+    color: #333;
+  }
+  
+  .shop-item p {
+    margin: 0.5rem 0 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .no-shops {
+    text-align: center;
+    padding: 2rem 0;
+  }
+  
+  .no-shops p {
+    margin-bottom: 1.5rem;
+    color: #666;
+  }
+  
+  .dashboard-loading, .dashboard-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    font-size: 1.1rem;
+    color: #666;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 992px) {
+    .vendor-dashboard {
+      grid-template-columns: 1fr;
+    }
+    
+    .dashboard-sidebar {
+      position: relative;
+      height: auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .dashboard-nav {
+      flex-direction: row;
+      overflow-x: auto;
+      padding: 1rem;
+      gap: 0.5rem;
+    }
+    
+    .dashboard-nav button {
+      white-space: nowrap;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .overview-stats {
+      grid-template-columns: 1fr;
+    }
+  }

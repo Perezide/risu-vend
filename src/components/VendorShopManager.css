@@ -1,0 +1,206 @@
+/* VendorShopManager.css */
+.shop-manager {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+  }
+  
+  .shop-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  
+  .shop-manager-header h2 {
+    margin: 0;
+    color: #333;
+  }
+  
+  .shop-form-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .shop-form-container h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+  
+  .shop-form {
+    display: grid;
+    gap: 1.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 0;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #444;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.1);
+  }
+  
+  .form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .shops-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .shop-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .shop-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.07);
+  }
+  
+  .shop-card-header {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .shop-card-header h3 {
+    margin: 0;
+    color: #333;
+  }
+  
+  .shop-category {
+    display: inline-block;
+    background-color: #e5ebff;
+    color: #4a6cf7;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+  }
+  
+  .shop-description {
+    padding: 1.5rem;
+    margin: 0;
+    color: #555;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .shop-details {
+    padding: 1.5rem;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .shop-details > div {
+    margin-bottom: 0.5rem;
+  }
+  
+  .shop-details > div:last-child {
+    margin-bottom: 0;
+  }
+  
+  .shop-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #eaeaea;
+  }
+  
+  .edit-button, .delete-button {
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .edit-button {
+    background-color: #4a6cf7;
+    color: white;
+    border: none;
+  }
+  
+  .edit-button:hover {
+    background-color: #3a57d5;
+  }
+  
+  .delete-button {
+    background-color: white;
+    color: #e53935;
+    border: 1px solid #e53935;
+  }
+  
+  .delete-button:hover {
+    background-color: #ffebee;
+  }
+  
+  .no-shops-message {
+    text-align: center;
+    padding: 3rem 0;
+    color: #666;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .shop-manager-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .shops-list {
+      grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
