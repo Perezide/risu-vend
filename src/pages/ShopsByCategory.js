@@ -35,8 +35,11 @@ const ProductCard = ({ product }) => {
         productId: product.id,
         name: product.name,
         imageUrl: product.imageUrl,
+        price: product.price,
         quantity: 1,
         size: '',
+        shopId: product.shopId,
+        shopName: product.shopName,  // Make sure this is available
         addedAt: serverTimestamp()
       });
 
@@ -48,23 +51,24 @@ const ProductCard = ({ product }) => {
   };
 
   return (
+    <>
+    <div onClick={handleProductClick} >
     <div className="shop-product-card">
       <div onClick={handleProductClick} className="shop-product-image-container">
         <img src={product.imageUrl} alt={product.name} className="shop-product-image" />
       </div>
       <div className="shop-product-info">
         <h4 className="shop-product-name">{product.name}</h4>
-        <div className="shop-product-price">${product.price}</div>
+        <div className="shop-product-price">₦{product.price}</div>
       </div>
       <div className="shop-product-actions">
         <button onClick={handleAddToCart} className="shop-add-to-cart">
           <ShoppingCart size={16} />
         </button>
-        <button onClick={handleProductClick} className="shop-view-product">
-          View
-        </button>
       </div>
     </div>
+    </div>
+    </>
   );
 };
 
@@ -106,11 +110,12 @@ const ShopsByCategory = () => {
       try {
         setLoading(true);
         
-        // Fetch featured shops
+        // Fetch featured shops - UPDATED to only get approved shops
         const shopsRef = collection(db, 'shops');
         const shopsQuery = query(
           shopsRef,
           where('active', '==', true),
+          where('approved', '==', true),  // Add approved condition
           orderBy('createdAt', 'desc'),
           limit(3)
         );
@@ -134,7 +139,8 @@ const ShopsByCategory = () => {
             const productsSnapshot = await getDocs(productsQuery);
             const products = productsSnapshot.docs.map(doc => ({
               id: doc.id,
-              ...doc.data()
+              ...doc.data(),
+              shopName: shop.shopName // Add shopName to product data for cart
             }));
             
             return {
@@ -144,7 +150,12 @@ const ShopsByCategory = () => {
           })
         );
         
-        setShopsWithProducts(shopsData);
+        // Only include shops that have products
+        const shopsWithProductsFiltered = shopsData.filter(
+          shopData => shopData.products.length > 0
+        );
+        
+        setShopsWithProducts(shopsWithProductsFiltered);
       } catch (err) {
         console.error("Error fetching shops and products:", err);
         setError("Failed to load shops and products");

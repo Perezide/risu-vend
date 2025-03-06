@@ -1,4 +1,3 @@
-// src/components/VendorShopManager.js
 import React, { useState } from 'react';
 import { addDoc, collection, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -113,7 +112,9 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
           vendorEmail: firebaseUser.email,
           createdAt: new Date(),
           updatedAt: new Date(),
-          active: true
+          active: true,
+          approved: false, // New shops start as unapproved
+          statusUpdatedAt: null // Will be set when approved/rejected
         };
         
         const docRef = await addDoc(collection(db, 'shops'), shopData);
@@ -124,7 +125,7 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
         };
         
         onShopCreated(newShop);
-        setSuccessMessage('Shop created successfully');
+        setSuccessMessage('Shop created successfully and is pending approval by an administrator');
         setIsCreating(false);
         resetForm();
       } else if (isEditing && selectedShop) {
@@ -133,8 +134,17 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
         
         const updatedData = {
           ...formData,
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          // If the shop was already approved, mark it for re-approval if significant fields change
+          approved: selectedShop.approved && !hasSignificantChanges(selectedShop, formData) 
+            ? selectedShop.approved 
+            : false
         };
+        
+        // If approval status changed, add a timestamp
+        if (selectedShop.approved && !updatedData.approved) {
+          updatedData.statusUpdatedAt = new Date();
+        }
         
         await updateDoc(shopRef, updatedData);
         
@@ -144,7 +154,13 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
         };
         
         onShopSelect(updatedShop);
-        setSuccessMessage('Shop updated successfully');
+        
+        if (selectedShop.approved && !updatedData.approved) {
+          setSuccessMessage('Shop updated successfully and has been resubmitted for approval');
+        } else {
+          setSuccessMessage('Shop updated successfully');
+        }
+        
         setIsEditing(false);
         resetForm();
       }
@@ -156,8 +172,18 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
     }
   };
 
+  // Check if significant shop details have changed that would require re-approval
+  const hasSignificantChanges = (originalShop, newData) => {
+    // Fields that if changed would require re-approval
+    const significantFields = ['shopName', 'category', 'description'];
+    
+    return significantFields.some(field => 
+      originalShop[field] !== newData[field] && newData[field] !== ''
+    );
+  };
+
   const handleDeleteShop = async (shopId) => {
-    if (alert('Are you sure you want to delete this shop? This action cannot be undone.')) {
+    if (!window.confirm('Are you sure you want to delete this shop? This action cannot be undone.')) {
       return;
     }
     
@@ -179,6 +205,17 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
     }
   };
 
+  // Helper function to get approval status badge
+  const getApprovalStatusBadge = (shop) => {
+    if (shop.approved === true) {
+      return <span className="status-badge approved">Approved</span>;
+    } else if (shop.approved === false) {
+      return <span className="status-badge pending">Pending Approval</span>;
+    } else {
+      return <span className="status-badge unknown">Status Unknown</span>;
+    }
+  };
+
   return (
     <div className="shop-manager">
       <div className="shop-manager-header">
@@ -196,6 +233,19 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
       {(isCreating || isEditing) ? (
         <div className="shop-form-container">
           <h3>{isCreating ? 'Create New Shop' : 'Edit Shop'}</h3>
+          
+          {isCreating && (
+            <div className="approval-notice">
+              <p>New shops require administrator approval before they become visible to customers.</p>
+            </div>
+          )}
+          
+          {isEditing && selectedShop && selectedShop.approved && (
+            <div className="approval-notice">
+              <p>Making significant changes to your shop may require re-approval by an administrator.</p>
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="shop-form">
             <div className="form-group">
               <label htmlFor="shopName">Shop Name</label>
@@ -347,8 +397,17 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
               <div key={shop.id} className="shop-card">
                 <div className="shop-card-header">
                   <h3>{shop.shopName}</h3>
-                  <span className="shop-category">{shop.category}</span>
+                  <div className="shop-metadata">
+                    <span className="shop-category">{shop.category}</span>
+                    {getApprovalStatusBadge(shop)}
+                  </div>
                 </div>
+                
+                {shop.approved === false && (
+                  <div className="approval-pending-notice">
+                    <p>This shop is pending approval from administrators and is not visible to customers yet.</p>
+                  </div>
+                )}
                 
                 <p className="shop-description">{shop.description}</p>
                 
@@ -370,6 +429,15 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
                       <strong>Website:</strong> <a href={shop.website} target="_blank" rel="noopener noreferrer">{shop.website}</a>
                     </div>
                   )}
+                  
+                  <div className="shop-status-info">
+                    <strong>Created:</strong> {shop.createdAt?.toDate?.().toLocaleDateString() || 'N/A'}
+                    {shop.statusUpdatedAt && (
+                      <span>
+                        <strong> | Status Updated:</strong> {shop.statusUpdatedAt.toDate().toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="shop-actions">
@@ -391,6 +459,7 @@ const VendorShopManager = ({ shops, onShopCreated, onShopSelect, selectedShop })
           ) : (
             <div className="no-shops-message">
               <p>You don't have any shops yet. Create your first shop to start selling products!</p>
+              <p className="approval-info">Note: All new shops require administrator approval before they become visible to customers.</p>
             </div>
           )}
         </div>

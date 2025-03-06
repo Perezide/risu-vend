@@ -1,9 +1,22 @@
 import { createContext, useReducer, useEffect, useState } from 'react';
-import { auth } from '../firebase/config';
-import { onAuthStateChanged } from 'firebase/auth';
-import { useAuth0 } from '@auth0/auth0-react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { 
+  auth, 
+  db 
+} from '../firebase/config';
+import { 
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs
+} from 'firebase/firestore';
 
 export const AuthContext = createContext();
 
@@ -32,15 +45,7 @@ export const AuthContextProvider = ({ children }) => {
   });
   
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Auth0 hooks
-  const { 
-    user: auth0User, 
-    isAuthenticated, 
-    isLoading: auth0Loading,
-    loginWithRedirect,
-    logout: auth0Logout
-  } = useAuth0();
+  const googleProvider = new GoogleAuthProvider();
 
   // Initialize state from localStorage on mount
   useEffect(() => {
@@ -59,7 +64,7 @@ export const AuthContextProvider = ({ children }) => {
     }
   }, []);
 
-  // Traditional Firebase auth state listener
+  // Firebase auth state listener
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, user => {
       dispatch({ type: 'AUTH_IS_READY', payload: user });
@@ -94,78 +99,76 @@ export const AuthContextProvider = ({ children }) => {
     return () => unsub();
   }, []);
 
-  // Auth0 user sync with Firestore
-  useEffect(() => {
-    const syncAuth0UserWithFirestore = async () => {
-      if (!isAuthenticated || auth0Loading || isProcessing) return;
-      
-      try {
-        setIsProcessing(true);
-        
-        // Check if Auth0 user exists in Firestore
-        const usersRef = collection(db, 'users');
-        const q = query(usersRef, where('email', '==', auth0User.email));
-        const querySnapshot = await getDocs(q);
-        
-        let userData;
-        let userId;
-        
-        if (!querySnapshot.empty) {
-          // User exists, get their data
-          userData = querySnapshot.docs[0].data();
-          userId = querySnapshot.docs[0].id;
-          
-          // Update state with Firestore user data
-          const userWithId = {
-            id: userId,
-            ...userData
-          };
-          
-          dispatch({ type: 'SET_FIREBASE_USER', payload: userWithId });
-        } else {
-          // If user doesn't exist in Firestore, don't create them automatically
-          // We'll let the signup components handle that for proper user/vendor differentiation
-          console.log('Auth0 user not found in Firestore. Waiting for signup process.');
-        }
-        
-        // Update auth state with Auth0 user
-        dispatch({ type: 'LOGIN', payload: auth0User });
-        
-      } catch (error) {
-        console.error('Error syncing Auth0 user with Firestore:', error);
-      } finally {
-        setIsProcessing(false);
+  // Sign up with email/password
+  const signup = async (email, password) => {
+    setIsProcessing(true);
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      if (!res) {
+        throw new Error('Could not complete signup');
       }
-    };
-    
-    syncAuth0UserWithFirestore();
-  }, [isAuthenticated, auth0User, auth0Loading, isProcessing]);
+      return res.user;
+    } catch (error) {
+      console.error("Error signing up:", error);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
-  // Combined logout function
+  // Login with email/password
+  const login = async (email, password) => {
+    setIsProcessing(true);
+    try {
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      return res.user;
+    } catch (error) {
+      console.error("Error logging in:", error);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Google sign in
+  const signInWithGoogle = async () => {
+    setIsProcessing(true);
+    try {
+      const res = await signInWithPopup(auth, googleProvider);
+      return res.user;
+    } catch (error) {
+      console.error("Error with Google sign-in:", error);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Logout function
   const logout = async () => {
     // Clear localStorage
     localStorage.removeItem('firebaseUser');
     
-    if (isAuthenticated) {
-      // Auth0 logout
-      auth0Logout({ returnTo: window.location.origin });
+    try {
+      await signOut(auth);
+      dispatch({ type: 'LOGOUT' });
+    } catch (error) {
+      console.error("Error logging out:", error);
+      throw error;
     }
-    
-    // Also dispatch local logout
-    dispatch({ type: 'LOGOUT' });
   };
 
   console.log('AuthContext state:', state);
   
-  // Provide both Auth0 and Firebase auth methods
   return (
     <AuthContext.Provider value={{ 
       ...state, 
       dispatch,
-      login: loginWithRedirect,
+      signup,
+      login,
+      signInWithGoogle,
       logout,
-      isAuthenticated,
-      isLoading: auth0Loading || isProcessing
+      isLoading: isProcessing
     }}>
       {children}
     </AuthContext.Provider>

@@ -72,7 +72,7 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="footer-newsletter">
+        {/* <div className="footer-newsletter">
           <h3>Subscribe to our Newsletter</h3>
           <p>Get the latest updates, special offers and new product announcements</p>
           <form className="newsletter-form">
@@ -83,7 +83,7 @@ const Footer = () => {
             />
             <button type="submit">Subscribe</button>
           </form>
-        </div>
+        </div> */}
         
         <div className="footer-bottom">
           <div className="payment-methods">

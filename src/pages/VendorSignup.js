@@ -1,7 +1,7 @@
 // src/components/VendorSignup.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuthContext } from '../hooks/useAuthContext';
 import './Signup.css';
@@ -23,13 +23,15 @@ const BUSINESS_CATEGORIES = [
 ];
 
 const VendorSignup = () => {
-  const { login, isAuthenticated, user, dispatch } = useAuthContext();
+  const { signup, signInWithGoogle, user, dispatch } = useAuthContext();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     userName: '',
     phoneNumber: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     shopName: '',
     category: '',
     description: ''
@@ -48,15 +50,22 @@ const VendorSignup = () => {
     setIsSubmitting(true);
     setError('');
     
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setIsSubmitting(false);
+      return;
+    }
+    
     try {
-      // Use Auth0 user email if authenticated
-      const userEmail = isAuthenticated ? user.email : formData.email;
+      // Create the user with Firebase Auth
+      const authUser = await signup(formData.email, formData.password);
       
       // Add vendor to Firestore
       const vendorData = {
         userName: formData.userName,
         phoneNumber: formData.phoneNumber,
-        email: userEmail,
+        email: authUser.email,
         shopName: formData.shopName,
         category: formData.category,
         description: formData.description,
@@ -76,26 +85,68 @@ const VendorSignup = () => {
       // Update the AuthContext with the Firestore user
       dispatch({ type: 'SET_FIREBASE_USER', payload: newVendorData });
       
-      // If not already authenticated via Auth0, update the user state too
-      if (!isAuthenticated) {
-        dispatch({ type: 'LOGIN', payload: { email: userEmail } });
-      }
-      
       // Navigate to vendor dashboard
       navigate('/vendor-dashboard');
     } catch (err) {
       console.error('Error creating vendor account:', err);
-      setError('Failed to create vendor account. Please try again.');
+      setError(err.message || 'Failed to create vendor account. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  const handleGoogleSignup = () => {
-    login({
-      connection: 'google-oauth2',
-      redirect_uri: `${window.location.origin}/vendor-dashboard`
-    });
+  const handleGoogleSignup = async () => {
+    setIsSubmitting(true);
+    setError('');
+    
+    try {
+      // Sign in with Google
+      const authUser = await signInWithGoogle();
+      
+      // Check if user already exists in Firestore
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', authUser.email));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        // Check if user is already a vendor
+        const userData = querySnapshot.docs[0].data();
+        if (userData.userType === 'vendor') {
+          // Update context
+          dispatch({ 
+            type: 'SET_FIREBASE_USER', 
+            payload: { 
+              id: querySnapshot.docs[0].id, 
+              ...userData 
+            } 
+          });
+          
+          navigate('/vendor-dashboard');
+          return;
+        }
+        // If user exists but is not a vendor, show error
+        setError('An account with this email already exists. Please log in or use a different email.');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // New user - we'll continue with the form to get vendor details
+      // Just update the email in the form for now
+      setFormData({
+        ...formData,
+        email: authUser.email,
+        userName: authUser.displayName || formData.userName || authUser.email.split('@')[0]
+      });
+      
+      // Keep the auth user in context but don't navigate yet - 
+      // they still need to complete the vendor details
+      
+    } catch (err) {
+      console.error('Error signing up with Google:', err);
+      setError(err.message || 'Failed to sign up with Google. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
@@ -149,6 +200,37 @@ const VendorSignup = () => {
               required
             />
           </div>
+          
+          {/* Only show password fields if user is not authenticated with Google */}
+          {!user && (
+            <>
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password"
+                  required={!user}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
+                  required={!user}
+                />
+              </div>
+            </>
+          )}
           
           <div className="form-group">
             <label htmlFor="shopName">Shop Name</label>
@@ -210,6 +292,7 @@ const VendorSignup = () => {
         <button 
           onClick={handleGoogleSignup} 
           className="google-button"
+          disabled={isSubmitting || user}
         >
           <img src={googleIcon} alt="Google" />
           <span>Sign up with Google</span>

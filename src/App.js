@@ -17,7 +17,6 @@ import MyOrders from "./pages/MyOrders";
 import AdminDashboard from "./pages/AdminDashboard";
 
 import { Toaster } from "react-hot-toast";
-import useAdminStatus from "./hooks/useAdminStatus";
 import ShopingCart from "./pages/ShopingCart";
 import UserSignup from "./pages/UserSignup";
 import VendorSignup from "./pages/VendorSignup";
@@ -33,26 +32,6 @@ function App() {
 
   const toggleSideNav = () => {
     setIsSideNavOpen(!isSideNavOpen);
-  };
-
-  const AdminRoute = ({ children }) => {
-    const { isAdmin, isLoading } = useAdminStatus();
-    
-    if (isLoading) {
-      return (
-        <div className="loading-container">
-          <div className="loading-spinner-overlay">
-            <div className="loading-spinner"></div>
-          </div>
-        </div>
-      );
-    }
-  
-    if (!isAdmin) {
-      return <Navigate to="/" replace />;
-    }
-  
-    return children;
   };
 
 // Protected route component
@@ -119,12 +98,14 @@ const ProtectedRoute = ({ children, requiredType }) => {
             <Route path="/" element={<Home />} />
             <Route path="/shop/:shopId" element={<Shop />} /> {/* Add the Shop route */}
             <Route path="/product/:productId" element={<ProductDetail />} />
-            <Route path="/cart" element={<ShopingCart />} />
+            <Route path="/shopping-cart" element={<ShopingCart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
-            {/* <Route path="/category/:categoryId" element={<Category />} />
-            <Route path="/product/:productId" element={<Product />} /> */}
+            <Route path="admin-dashboard" element={<AdminDashboard />}/>
+            <Route path="/shoping-cart" element={ <ShopingCart /> } />
+            <Route path="/orders" element={<MyOrders />} />
+            <Route path="/saved" element={ <Saved /> }/>
             
             {/* Guest Routes */}
             <Route
@@ -152,15 +133,6 @@ const ProtectedRoute = ({ children, requiredType }) => {
               }
             />
 
-            {/* Protected Routes */}
-              <Route
-              path="/saved"
-              element={
-                <ProtectedRoute>
-                  <Saved />
-                </ProtectedRoute>
-              }
-            />
         {/* Protected routes */}
         <Route path="/profile" element={
           <ProtectedRoute requiredType="customer">
@@ -173,28 +145,6 @@ const ProtectedRoute = ({ children, requiredType }) => {
             <VendorDashboard />
           </ProtectedRoute>
         } />
-
-            <Route path="/shoping-cart" element={
-              <ProtectedRoute>
-                <ShopingCart />
-              </ProtectedRoute>
-              } />
-            <Route path="/orders" element={
-              <ProtectedRoute>
-                <MyOrders />
-              </ProtectedRoute>
-            } />
-
-            <Route 
-              path="/admin-dashboard" 
-              element={
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              } 
-            />
-
-
 
           </Routes>
           <Toaster />

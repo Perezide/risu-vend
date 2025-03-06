@@ -232,23 +232,23 @@ const SalesReport = ({ selectedShop, shops, onShopSelect }) => {
                 </div>
               )}
             </div>
-            
+            <br />
             <div className="sales-dashboard">
               <div className="stats-grid">
                 <div className="stat-card">
                   <h3>Total Sales</h3>
-                  <p className="stat-value">{formatCurrency(stats.totalSales)}</p>
-                </div>
+                  <p className="stat-value">₦{(stats.totalSales)}</p>
+                </div><br />
                 
                 <div className="stat-card">
                   <h3>Total Orders</h3>
                   <p className="stat-value">{stats.totalOrders}</p>
-                </div>
+                </div><br />
                 
                 <div className="stat-card">
                   <h3>Average Order Value</h3>
                   <p className="stat-value">
-                    {formatCurrency(stats.averageOrderValue || 0)}
+                  ₦{(stats.averageOrderValue || 0)}
                   </p>
                 </div>
               </div>
@@ -265,7 +265,7 @@ const SalesReport = ({ selectedShop, shops, onShopSelect }) => {
                             <span className="product-name">{product.productName}</span>
                             <div className="product-metrics">
                               <span>{product.quantity} sold</span>
-                              <span>{formatCurrency(product.revenue)}</span>
+                              <span>₦{(product.revenue)}</span>
                             </div>
                           </div>
                         </div>
@@ -308,7 +308,7 @@ const SalesReport = ({ selectedShop, shops, onShopSelect }) => {
                             <td>{formatDate(order.createdAt)}</td>
                             <td>{order.customerName || 'Anonymous'}</td>
                             <td>{order.items.reduce((sum, item) => sum + item.quantity, 0)}</td>
-                            <td>{formatCurrency(order.totalAmount)}</td>
+                            <td>₦{(order.totalAmount)}</td>
                             <td>
                               <span className={`status-badge status-${order.status?.toLowerCase() || 'pending'}`}>
                                 {order.status || 'Pending'}

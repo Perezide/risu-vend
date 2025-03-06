@@ -114,7 +114,7 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
       productName: product.productName,
       description: product.description,
       price: product.price,
-      quantity: product.quantity,
+      quantity: product.quantity || '',
       category: product.category,
       imageFile: null
     });
@@ -159,12 +159,11 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
       return;
     }
     
-    // Validate form
+    // Validate form (making quantity optional)
     if (
       !formData.productName.trim() || 
       !formData.description.trim() || 
       !formData.price || 
-      !formData.quantity || 
       !formData.category.trim()
     ) {
       setError('Please fill all required fields');
@@ -191,13 +190,17 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
         productName: formData.productName.trim(),
         description: formData.description.trim(),
         price: parseFloat(formData.price),
-        quantity: parseInt(formData.quantity),
+        quantity: formData.quantity ? parseInt(formData.quantity) : 0,
         category: formData.category.trim(),
         imageUrl,
         shopId: selectedShop.id,
         vendorId: firebaseUser.id,
+        shopName: selectedShop.shopName, // Add shop name for reference in Shop components
         createdAt: isEditingProduct ? currentProduct.createdAt : new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        active: true, // Add active status
+        approved: selectedShop.approved || false, // Match shop approval status
+        name: formData.productName.trim() // Add name field for compatibility with Shop components
       };
       
       if (isEditingProduct) {
@@ -243,6 +246,7 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
                   onClick={() => onShopSelect(shop)}
                 >
                   {shop.shopName}
+                  {!shop.approved && <span className="approval-badge"> (Pending Approval)</span>}
                 </button>
               ))}
             </div>
@@ -251,6 +255,11 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
           <>
             <div className="selected-shop-info">
               <p>Managing products for: <strong>{selectedShop.shopName}</strong></p>
+              {!selectedShop.approved && (
+                <div className="shop-approval-notice">
+                  <p>This shop is pending approval. Products added won't be visible to customers until the shop is approved.</p>
+                </div>
+              )}
               {!isAddingProduct && !isEditingProduct && (
                 <button onClick={handleAddProduct} className="add-product-btn">
                   Add New Product
@@ -267,7 +276,7 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
                 
                 <form onSubmit={handleSubmit} className="product-form">
                   <div className="form-group">
-                    <label htmlFor="productName">Product Name</label>
+                    <label htmlFor="productName">Product Name *</label>
                     <input
                       type="text"
                       id="productName"
@@ -279,7 +288,7 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
                   </div>
                   
                   <div className="form-group">
-                    <label htmlFor="description">Description</label>
+                    <label htmlFor="description">Description *</label>
                     <textarea
                       id="description"
                       name="description"
@@ -291,7 +300,7 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
                   
                   <div className="form-row">
                     <div className="form-group">
-                      <label htmlFor="price">Price ($)</label>
+                      <label htmlFor="price">Price (₦) *</label>
                       <input
                         type="number"
                         id="price"
@@ -305,22 +314,21 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
                     </div>
                     
                     <div className="form-group">
-                      <label htmlFor="quantity">Quantity</label>
+                      <label htmlFor="quantity">Quantity (Optional)</label>
                       <input
                         type="number"
                         id="quantity"
                         name="quantity"
                         value={formData.quantity}
                         onChange={handleInputChange}
-                        min="1"
+                        min="0"
                         step="1"
-                        required
                       />
                     </div>
                   </div>
                   
                   <div className="form-group">
-                    <label htmlFor="category">Category</label>
+                    <label htmlFor="category">Category *</label>
                     <input
                       type="text"
                       id="category"
@@ -375,20 +383,29 @@ const ProductUpload = ({ selectedShop, shops, onShopSelect }) => {
                 ) : (
                   <div className="products-grid">
                     {products.map(product => (
-                      <div key={product.id} className="product-card">
-                        <div className="product-image">
+                      <div key={product.id} className="shop-product-card">
+                        <div className="shop-product-image-container">
                           {product.imageUrl ? (
-                            <img src={product.imageUrl} alt={product.productName} />
+                            <img src={product.imageUrl} alt={product.productName} className='shop-product-image' />
                           ) : (
                             <div className="no-image">No Image</div>
                           )}
                         </div>
-                        <div className="product-details">
+                        <div className="shop-product-info">
                           <h4>{product.productName}</h4>
-                          <p className="product-price">${product.price.toFixed(2)}</p>
-                          <p className="product-stock">In stock: {product.quantity}</p>
+                          <p className="product-price">₦{product.price.toFixed(2)}</p>
+                          <p className="product-stock">
+                            {product.quantity !== undefined && product.quantity !== null 
+                              ? `In stock: ${product.quantity}` 
+                              : 'No quantity specified'}
+                          </p>
+                          {!selectedShop.approved && (
+                            <p className="product-visibility">
+                              <span className="visibility-badge">Not visible to customers</span>
+                            </p>
+                          )}
                         </div>
-                        <div className="product-actions">
+                        <div className="shop-product-actions">
                           <button 
                             onClick={() => handleEditProduct(product)}
                             className="edit-product-btn"

@@ -297,7 +297,7 @@ const Profile = () => {
               <div className="profile-info">
                 <div className="info-item">
                   <span className="info-label">Account Type:</span>
-                  <span className="info-value">Customer</span>
+                  <span className="info-value">{profile.userType}</span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Member Since:</span>

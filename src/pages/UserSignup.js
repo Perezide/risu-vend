@@ -1,20 +1,22 @@
 // src/components/UserSignup.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuthContext } from '../hooks/useAuthContext';
 import './Signup.css';
 import googleIcon from '../assets/google-icon.svg';
 
 const UserSignup = () => {
-  const { login, isAuthenticated, user, dispatch } = useAuthContext();
+  const { signup, signInWithGoogle, dispatch } = useAuthContext();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     userName: '',
     phoneNumber: '',
     email: '',
+    password: '',
+    confirmPassword: ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,52 +32,105 @@ const UserSignup = () => {
     setIsSubmitting(true);
     setError('');
     
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setIsSubmitting(false);
+      return;
+    }
+    
     try {
-      // Use Auth0 user email if authenticated
-      const userEmail = isAuthenticated ? user.email : formData.email;
+      // Create the user with Firebase Auth
+      const user = await signup(formData.email, formData.password);
       
-      // Add user to Firestore
-      const docRef = await addDoc(collection(db, 'users'), {
-        userName: formData.userName,
-        phoneNumber: formData.phoneNumber,
-        email: userEmail,
-        userType: 'customer',
-        createdAt: new Date()
-      });
+      // Check if user already exists in Firestore
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', user.email));
+      const querySnapshot = await getDocs(q);
       
-      // Important: Update AuthContext with the new Firebase user data
-      const newUserData = {
-        id: docRef.id,
-        userName: formData.userName,
-        phoneNumber: formData.phoneNumber,
-        email: userEmail,
-        userType: 'customer'
-      };
-      
-      // Update the AuthContext with the Firestore user
-      dispatch({ type: 'SET_FIREBASE_USER', payload: newUserData });
-      
-      // If not already authenticated via Auth0, update the user state too
-      if (!isAuthenticated) {
-        dispatch({ type: 'LOGIN', payload: { email: userEmail } });
+      if (querySnapshot.empty) {
+        // Add user to Firestore if not exists
+        const newUserData = {
+          userName: formData.userName,
+          phoneNumber: formData.phoneNumber,
+          email: user.email,
+          userType: 'customer',
+          createdAt: new Date()
+        };
+        
+        const docRef = await addDoc(collection(db, 'users'), newUserData);
+        
+        // Update AuthContext with the new Firebase user data
+        const userWithId = {
+          id: docRef.id,
+          ...newUserData
+        };
+        
+        dispatch({ type: 'SET_FIREBASE_USER', payload: userWithId });
       }
       
       // Navigate to profile page
       navigate('/profile');
     } catch (err) {
       console.error('Error creating user:', err);
-      setError('Failed to create account. Please try again.');
+      setError(err.message || 'Failed to create account. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  const handleGoogleSignup = () => {
-    // We'll rely on the Auth0 redirect flow to handle the authentication
-    login({
-      connection: 'google-oauth2',
-      redirect_uri: `${window.location.origin}/profile`
-    });
+  const handleGoogleSignup = async () => {
+    setIsSubmitting(true);
+    setError('');
+    
+    try {
+      // Sign in with Google
+      const user = await signInWithGoogle();
+      
+      // Check if the user exists in Firestore
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', user.email));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        // Create new user in Firestore
+        const newUserData = {
+          userName: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          phoneNumber: user.phoneNumber || '',
+          userType: 'customer',
+          createdAt: new Date()
+        };
+        
+        const docRef = await addDoc(collection(db, 'users'), newUserData);
+        
+        // Update context
+        dispatch({ 
+          type: 'SET_FIREBASE_USER', 
+          payload: { 
+            id: docRef.id, 
+            ...newUserData 
+          } 
+        });
+      } else {
+        // Update context with existing user
+        const userData = querySnapshot.docs[0].data();
+        dispatch({ 
+          type: 'SET_FIREBASE_USER', 
+          payload: { 
+            id: querySnapshot.docs[0].id, 
+            ...userData 
+          } 
+        });
+      }
+      
+      navigate('/profile');
+    } catch (err) {
+      console.error('Error signing up with Google:', err);
+      setError(err.message || 'Failed to sign up with Google. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
@@ -128,6 +183,32 @@ const UserSignup = () => {
             />
           </div>
           
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm your password"
+              required
+            />
+          </div>
+          
           <button 
             type="submit" 
             className="primary-button"
@@ -144,6 +225,7 @@ const UserSignup = () => {
         <button 
           onClick={handleGoogleSignup} 
           className="google-button"
+          disabled={isSubmitting}
         >
           <img src={googleIcon} alt="Google" />
           <span>Sign up with Google</span>

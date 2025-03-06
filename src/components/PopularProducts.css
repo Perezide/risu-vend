@@ -2,6 +2,7 @@
     padding: 60px 20px;
     max-width: 1200px;
     margin: 0 auto;
+    overflow: hidden;
   }
   
   .popular-products-header {
@@ -120,13 +121,13 @@
   }
   
   .popular-add-to-cart {
-    background-color: #ff6b6b;
+    background-color: #0066cc;
     color: white;
     margin-right: 8px;
   }
   
   .popular-add-to-cart:hover {
-    background-color: #ff5252;
+    background-color: #004c99;
   }
   
   .popular-view-details {
@@ -150,13 +151,13 @@
   
   .popular-products .slick-dots li button:before {
     font-size: 10px;
-    color: #ff6b6b;
+    color: #0066cc;
     opacity: 0.5;
   }
   
   .popular-products .slick-dots li.slick-active button:before {
     opacity: 1;
-    color: #ff6b6b;
+    color: #0066cc;
   }
   
   .popular-products .slick-prev,
@@ -176,4 +177,8 @@
     .popular-products {
       padding: 40px 15px;
     }
+  }
+
+  .no-product {
+    text-align: center;
   }

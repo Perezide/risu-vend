@@ -9,15 +9,14 @@ import {
 } from 'lucide-react';
 import useAdminStatus from '../hooks/useAdminStatus';
 import { useAuthContext } from '../hooks/useAuthContext'; // Adjust import path as needed
-import { useLogout } from '../hooks/useLogout'; // Adjust import path as needed
 import { useProductSearch } from '../hooks/useProductSearch';
 import './Header.css';
+import logo from '../assets/WhatsApp Image 2025-03-06 at 12.22.00_b1641a51.jpg'
 
 const Header = ({ toggleSideNav }) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuthContext();
-  const { logout } = useLogout();
+  const { firebaseUser, logout } = useAuthContext();
   const { isAdmin } = useAdminStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -50,7 +49,11 @@ const Header = ({ toggleSideNav }) => {
           >
             <Menu />
           </button>
-          <Link to="/" className="logo">RiSU Vend</Link>
+        </div>
+        <div className="header-center">
+        <Link to="/" className="logo">
+        <img src={logo} alt="RiSU VEND Logo" />
+        </Link>
         </div>
 
         <div className="header-right">
@@ -100,7 +103,7 @@ const Header = ({ toggleSideNav }) => {
         </div>
       )}
     </div>
-          <Link to="/cart" className="cart-icon">
+          <Link to="/shopping-cart" className="cart-icon">
             <ShoppingCart />
           </Link>
           <Link to="/saved" className="saved-icon">
@@ -113,7 +116,7 @@ const Header = ({ toggleSideNav }) => {
             <User />
             {isUserDropdownOpen && (
               <div className="user-menu">
-                {user ? (
+                {firebaseUser ? (
                   <>
                     <Link to="/profile" className="user-menu-item">Profile</Link>
                     <Link to="/orders" className="user-menu-item">My Orders</Link>
@@ -136,13 +139,6 @@ const Header = ({ toggleSideNav }) => {
                     <Link to="/login" className="user-menu-item">Login</Link>
                     <Link to="/user-signup" className="user-menu-item">User Signup</Link>
                     <Link to="/vendor-signup" className="user-menu-item">Vendor Signup</Link>
-
-                    <div 
-                      className="user-menu-item logout"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </div>
                   </>
                 )}
               </div>

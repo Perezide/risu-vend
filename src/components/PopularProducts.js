@@ -51,13 +51,17 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="popular-product-card">
-      <div onClick={handleProductClick} className="popular-product-card-content">
-        <div className="popular-product-image-container">
-          <img src={product.imageUrl} alt={product.name} className="popular-product-image" />
+    <>
+    <div 
+    onClick={handleProductClick} 
+  >
+    <div className="shop-product-card">
+        <div className="shop-product-image-container">
+          <img src={product.imageUrl} alt={product.name} className="shop-product-image" />
         </div>
+        <div onClick={handleProductClick} className="shop-product-info">
         <h3 className="popular-product-name">{product.name}</h3>
-        <div className="popular-product-price">${product.price}</div>
+        <div className="shop-product-price">₦{product.price}</div>
         {product.rating && (
           <div className="popular-product-rating">
             {'★'.repeat(product.rating)}{'☆'.repeat(5 - product.rating)}
@@ -65,19 +69,18 @@ const ProductCard = ({ product }) => {
           </div>
         )}
       </div>
-      <div className="popular-product-card-actions">
-        <button onClick={handleAddToCart} className="popular-add-to-cart">
+      <div className="shop-product-actions">
+        <button onClick={(e) => {
+          e.stopPropagation(); // Prevent click from bubbling to parent
+          handleAddToCart();
+        }} className="popular-add-to-cart">
           <ShoppingCart size={18} />
           Add to Cart
         </button>
-        <button 
-          onClick={handleProductClick} 
-          className="popular-view-details"
-        >
-          View Details
-        </button>
       </div>
     </div>
+    </div>
+    </>
   );
 };
 
@@ -88,14 +91,37 @@ const PopularProducts = () => {
     const fetchPopularProducts = async () => {
       try {
         const productsRef = collection(db, 'products');
+        // Modified query to only filter by isPopular flag
         const q = query(
           productsRef, 
           where('isPopular', '==', true), 
+          // Add salesCount as secondary sort
           orderBy('salesCount', 'desc'), 
           limit(8)
         );
+        
         const querySnapshot = await getDocs(q);
-        setProducts(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const popularProducts = querySnapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        }));
+        
+        // Ensure we have products even if sales count is 0
+        if (popularProducts.length > 0) {
+          setProducts(popularProducts);
+        } else {
+          // Fallback query without salesCount sorting if no results
+          const fallbackQuery = query(
+            productsRef, 
+            where('isPopular', '==', true),
+            limit(8)
+          );
+          const fallbackSnapshot = await getDocs(fallbackQuery);
+          setProducts(fallbackSnapshot.docs.map(doc => ({ 
+            id: doc.id, 
+            ...doc.data() 
+          })));
+        }
       } catch (error) {
         console.error("Error fetching popular products:", error);
       }
@@ -127,13 +153,17 @@ const PopularProducts = () => {
       </div>
       
       <div className="popular-products-slider">
-        <Slider {...sliderSettings}>
-          {products.map(product => (
-            <div key={product.id} className="popular-product-slide">
-              <ProductCard product={product} />
-            </div>
-          ))}
-        </Slider>
+        {products.length > 0 ? (
+          <Slider {...sliderSettings}>
+            {products.map(product => (
+              <div key={product.id} className="popular-product-slide">
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </Slider>
+        ) : (
+          <p className="no-product">No popular products available at this time.</p>
+        )}
       </div>
     </section>
   );

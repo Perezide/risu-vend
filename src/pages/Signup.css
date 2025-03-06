@@ -27,7 +27,7 @@
   .signup-card {
     width: 100%;
     max-width: 520px;
-    padding: 2.5rem;
+    padding: 2.5rem 4.5rem 2.5rem 2.5rem;
     background-color: var(--card-background);
     border-radius: 12px;
     box-shadow: var(--shadow);
@@ -206,6 +206,13 @@
   @media (max-width: 768px) {
     .signup-card {
       padding: 1.5rem;
+    }
+
+    .signup-form .form-group input,
+    .signup-form .form-group textarea,
+    .signup-form .form-group select
+    {
+      width: 91%;
     }
     
     .form-row {

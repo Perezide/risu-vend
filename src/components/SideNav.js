@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../hooks/useAuthContext';
-import { useLogout } from '../hooks/useLogout';
 import './SideNav.css';
 import useAdminStatus from '../hooks/useAdminStatus';
 import { useProductSearch } from '../hooks/useProductSearch';
@@ -21,8 +20,7 @@ import { useProductSearch } from '../hooks/useProductSearch';
 const SideNav = ({ isOpen, toggleSideNav }) => {
   const { isAdmin } = useAdminStatus()
   const navigate = useNavigate()
-  const { user } = useAuthContext();
-  const { logout, isPending } = useLogout();
+  const { user, logout, isLoading } = useAuthContext();
   // const [isCategoriessOpen, setIsCategoriesOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { searchResults, isSearching, searchProducts } = useProductSearch();
@@ -195,10 +193,10 @@ const SideNav = ({ isOpen, toggleSideNav }) => {
                 <button 
                   onClick={handleLogout} 
                   className="logout-button"
-                  disabled={isPending}
+                  disabled={isLoading}
                 >
                   <LogOut size={20} /> 
-                  {isPending ? 'Logging out...' : 'Logout'}
+                  {isLoading ? 'Logging out...' : 'Logout'}
                 </button>
               </li>
             )}

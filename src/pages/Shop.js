@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   collection, 
   query, 
@@ -10,20 +10,21 @@ import {
   serverTimestamp,
   addDoc
 } from 'firebase/firestore';
-import { ShoppingCart, Filter, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Filter, ChevronDown, House, HouseIcon, HousePlug } from 'lucide-react';
 import { db, auth } from '../firebase/config';
 import { toast } from 'react-hot-toast';
 import './Shop.css';
 
-const Shop = () => {
+const Shop = ({product}) => {
   const { shopId } = useParams();
+  const navigate = useNavigate();
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState('newest');
   const [filterOpen, setFilterOpen] = useState(false);
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 5000 });
   const [filteredProducts, setFilteredProducts] = useState([]);
   
   // Fetch shop and its products
@@ -46,6 +47,14 @@ const Shop = () => {
           id: shopDoc.id,
           ...shopDoc.data()
         };
+        
+        // Check if shop is approved - redirect if not approved
+        if (!shopData.approved) {
+          setError("This shop is not available");
+          // Redirect to homepage or another appropriate page
+          navigate('/');
+          return;
+        }
         
         setShop(shopData);
         
@@ -75,7 +84,11 @@ const Shop = () => {
     if (shopId) {
       fetchShopAndProducts();
     }
-  }, [shopId]);
+  }, [shopId, navigate]);
+
+  const handleProductClick = () => {
+    navigate(`/product/${product.id}`);
+  };
   
   // Apply filters and sorting
   useEffect(() => {
@@ -161,7 +174,7 @@ const Shop = () => {
         <div className="shop-header-overlay">
           <div className="shop-header-content">
             <div className="shop-logo-container">
-              {shop.logoUrl && <img src={shop.logoUrl} alt={`${shop.shopName} logo`} className="shop-logo" />}
+              { <House className='shop-logo'/>}
             </div>
             <div className="shop-details">
               <h1 className="shop-title">{shop.shopName}</h1>
@@ -177,12 +190,12 @@ const Shop = () => {
       
       <div className="shop-container">
         <div className="shop-sidebar">
-          <div className="filter-header" onClick={() => setFilterOpen(!filterOpen)}>
+          <div className='filter-header' onClick={() => setFilterOpen(!filterOpen)}>
             <div className="filter-title">
               <Filter size={18} />
               <h3>Filters</h3>
             </div>
-            <ChevronDown size={18} className={`filter-arrow ${filterOpen ? 'open' : ''}`} />
+            <ChevronDown size={18} className={`filter-arrow ${filterOpen ? 'open' : ''}`}/>
           </div>
           
           <div className={`filter-body ${filterOpen ? 'open' : ''}`}>
@@ -232,24 +245,22 @@ const Shop = () => {
           <div className="products-grid">
             {filteredProducts.length > 0 ? (
               filteredProducts.map(product => (
-                <div className="product-card" key={product.id}>
-                  <div className="product-image-container">
-                    <img src={product.imageUrl} alt={product.name} className="product-image" />
-                    <div className="product-actions">
-                      <button 
-                        className="add-to-cart-btn"
-                        onClick={() => handleAddToCart(product)}
-                      >
-                        <ShoppingCart size={16} />
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                  <div className="product-info">
-                    <h3 className="product-name">{product.name}</h3>
-                    <p className="product-price">${product.price.toFixed(2)}</p>
-                  </div>
-                </div>
+    <div onClick={handleProductClick} >
+    <div className="shop-product-card">
+      <div onClick={handleProductClick} className="shop-product-image-container">
+        <img src={product.imageUrl} alt={product.name} className="shop-product-image" />
+      </div>
+      <div className="shop-product-info">
+        <h4 className="shop-product-name">{product.name}</h4>
+        <div className="shop-product-price">₦{product.price}</div>
+      </div>
+      <div className="shop-product-actions">
+        <button onClick={handleAddToCart} className="shop-add-to-cart">
+          <ShoppingCart size={16} />
+        </button>
+      </div>
+    </div>
+    </div>
               ))
             ) : (
               <div className="no-products">

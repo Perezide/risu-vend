@@ -39,7 +39,9 @@ const VendorDashboard = () => {
         const shopsSnapshot = await getDocs(shopsQuery);
         const shopsData = shopsSnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          // Default to false if approved property doesn't exist
+          approved: doc.data().approved === undefined ? false : doc.data().approved
         }));
 
         setShops(shopsData);
@@ -64,8 +66,14 @@ const VendorDashboard = () => {
   };
 
   const handleShopCreated = (newShop) => {
-    setShops(prevShops => [...prevShops, newShop]);
-    setSelectedShop(newShop);
+    // Add default approved: false if not present
+    const shopWithApproval = {
+      ...newShop,
+      approved: newShop.approved === undefined ? false : newShop.approved
+    };
+    
+    setShops(prevShops => [...prevShops, shopWithApproval]);
+    setSelectedShop(shopWithApproval);
   };
 
   if (isLoading) {
@@ -76,12 +84,28 @@ const VendorDashboard = () => {
     return <div className="dashboard-error">Please log in to access vendor dashboard</div>;
   }
 
+  // Check if vendor is approved
+  if (!firebaseUser.approved) {
+    return (
+      <div className="vendor-pending-approval">
+        <h2>Account Pending Approval</h2>
+        <p>Your vendor account is currently under review by our administrators.</p>
+        <p>You'll be notified once your account has been approved.</p>
+        <p>Thank you for your patience!</p>
+      </div>
+    );
+  }
+
   return (
     <div className="vendor-dashboard">
       <div className="dashboard-sidebar">
         <div className="vendor-info">
           <h3>{firebaseUser.shopName || 'My Shop'}</h3>
           <p>{firebaseUser.email}</p>
+          <div className="vendor-status">
+            <span className="status-indicator approved"></span>
+            <span>Approved Vendor</span>
+          </div>
         </div>
         
         <nav className="dashboard-nav">
@@ -127,12 +151,12 @@ const VendorDashboard = () => {
               
               <div className="stat-card">
                 <h3>Products</h3>
-                <p className="stat-value">0</p>
+                <p className="stat-value">1</p>
               </div>
               
               <div className="stat-card">
                 <h3>Total Sales</h3>
-                <p className="stat-value">$0.00</p>
+                <p className="stat-value">₦0.00</p>
               </div>
               
               <div className="stat-card">
@@ -155,6 +179,12 @@ const VendorDashboard = () => {
                     >
                       <h4>{shop.shopName}</h4>
                       <p>{shop.category}</p>
+                      {/* Added shop approval status indicator */}
+                      <div className="shop-approval-status">
+                        <span className={`status-badge ${shop.approved ? 'approved' : 'pending'}`}>
+                          {shop.approved ? 'Approved' : 'Pending Approval'}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -170,6 +200,15 @@ const VendorDashboard = () => {
                 </div>
               )}
             </div>
+            
+            {/* Added section for pending shops */}
+            {shops.filter(shop => !shop.approved).length > 0 && (
+              <div className="pending-shops-notice">
+                <h3>Pending Shop Approvals</h3>
+                <p>You have {shops.filter(shop => !shop.approved).length} shop(s) pending approval by administrators.</p>
+                <p>Products in pending shops won't be visible to customers until the shop is approved.</p>
+              </div>
+            )}
           </div>
         )}
         

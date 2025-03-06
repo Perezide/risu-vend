@@ -4,7 +4,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 15px 20px;
-    background-color: #ffffff;
+    background-color: black;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
@@ -30,11 +30,11 @@
     display: none;
   }
   
-  .logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
-    text-decoration: none;
+  .header-center .logo img{
+    display: flex;
+    width: 28%;
+    align-self: center;
+    align-content: center;
   }
   
   .header-nav {
@@ -44,14 +44,14 @@
   }
   
   .header-nav a {
-    color: #333;
+    color: #ffffff;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
   }
   
   .header-nav a:hover {
-    color: #007bff;
+    color: #e4e4e4;
   }
   
   .categories-dropdown {
@@ -94,15 +94,27 @@
     align-items: center;
     gap: 15px;
   }
-  
-  .header-right button,
-  .header-right a {
+
+  .header-right .user-menu a {
     background: none;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     color: #333;
+    text-decoration: none;
+  }
+  
+  .header-right button,
+  .header-right a,
+  .header-right .user-icon
+  {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #ffffff;
     text-decoration: none;
   }
   
@@ -155,7 +167,7 @@
     }
   
     .menu-button {
-      color: #333;
+      color: #ffffff;
       background: none;
       border: none;
       cursor: pointer;
@@ -164,7 +176,7 @@
     }
   
     .menu-button Menu {
-      color: #333;
+      color: #ffffff;
     }
   }
   
